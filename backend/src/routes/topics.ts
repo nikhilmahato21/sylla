@@ -18,13 +18,18 @@ const topicSchema = z.object({
 
 topicsRouter.get("/", async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const { subjectId, status } = req.query;
+    const { subjectId, status } = z
+      .object({
+        subjectId: z.string(),
+        status: z.enum(["PENDING", "IN_PROGRESS", "DONE", "REVISION"]).optional(),
+      })
+      .parse(req.query);
 
     const topics = await prisma.topic.findMany({
       where: {
-        subjectId: subjectId as string,
+        subjectId,
         subject: { userId: req.userId },
-        ...(status ? { status: status as "PENDING" | "IN_PROGRESS" | "DONE" | "REVISION" } : {}),
+        ...(status ? { status } : {}),
       },
       orderBy: [{ order: "asc" }, { createdAt: "asc" }],
     });
@@ -60,12 +65,13 @@ topicsRouter.post("/", async (req: AuthRequest, res: Response): Promise<void> =>
 
 topicsRouter.patch("/:id/status", async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    const { id } = z.object({ id: z.string() }).parse(req.params);
     const { status } = z
       .object({ status: z.enum(["PENDING", "IN_PROGRESS", "DONE", "REVISION"]) })
       .parse(req.body);
 
     const topic = await prisma.topic.update({
-      where: { id: req.params.id },
+      where: { id },
       data: { status },
     });
     res.json(topic);
@@ -76,9 +82,10 @@ topicsRouter.patch("/:id/status", async (req: AuthRequest, res: Response): Promi
 
 topicsRouter.put("/:id", async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    const { id } = z.object({ id: z.string() }).parse(req.params);
     const data = topicSchema.partial().omit({ subjectId: true }).parse(req.body);
     const topic = await prisma.topic.update({
-      where: { id: req.params.id },
+      where: { id },
       data,
     });
     res.json(topic);
@@ -89,7 +96,8 @@ topicsRouter.put("/:id", async (req: AuthRequest, res: Response): Promise<void> 
 
 topicsRouter.delete("/:id", async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    await prisma.topic.delete({ where: { id: req.params.id } });
+    const { id } = z.object({ id: z.string() }).parse(req.params);
+    await prisma.topic.delete({ where: { id } });
     res.json({ success: true });
   } catch {
     res.status(500).json({ error: "Failed to delete topic" });

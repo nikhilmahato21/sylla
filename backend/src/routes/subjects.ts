@@ -62,9 +62,10 @@ subjectsRouter.post("/", async (req: AuthRequest, res: Response): Promise<void> 
 
 subjectsRouter.put("/:id", async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    const { id } = z.object({ id: z.string() }).parse(req.params);
     const data = subjectSchema.partial().parse(req.body);
     const subject = await prisma.subject.update({
-      where: { id: req.params.id, userId: req.userId },
+      where: { id, userId: req.userId },
       data: {
         ...data,
         examDate: data.examDate ? new Date(data.examDate) : undefined,
@@ -78,7 +79,8 @@ subjectsRouter.put("/:id", async (req: AuthRequest, res: Response): Promise<void
 
 subjectsRouter.delete("/:id", async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    await prisma.subject.delete({ where: { id: req.params.id, userId: req.userId } });
+    const { id } = z.object({ id: z.string() }).parse(req.params);
+    await prisma.subject.delete({ where: { id, userId: req.userId } });
     res.json({ success: true });
   } catch {
     res.status(500).json({ error: "Failed to delete subject" });

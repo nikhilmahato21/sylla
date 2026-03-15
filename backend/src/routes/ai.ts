@@ -2,6 +2,7 @@ import { Router, Response } from "express";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { z } from "zod";
 import { authenticate, AuthRequest } from "../middleware/auth";
 import { parseSyllabusPDF, generateStudyPlan, getTopicRecommendations, chatWithAI } from "../services/ai";
 import { prisma } from "../lib/prisma";
@@ -165,7 +166,8 @@ aiRouter.post("/study-plan", async (req: AuthRequest, res: Response): Promise<vo
 // Topic recommendations
 aiRouter.get("/recommendations/:subjectId", async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    const cacheKey = `recommendations:${req.userId}:${req.params.subjectId}`;
+    const { subjectId } = z.object({ subjectId: z.string() }).parse(req.params);
+    const cacheKey = `recommendations:${req.userId}:${subjectId}`;
     const cached = await redis.get(cacheKey);
     if (cached) {
       res.json(JSON.parse(cached));
@@ -173,7 +175,7 @@ aiRouter.get("/recommendations/:subjectId", async (req: AuthRequest, res: Respon
     }
 
     const subject = await prisma.subject.findFirst({
-      where: { id: req.params.subjectId, userId: req.userId },
+      where: { id: subjectId, userId: req.userId },
       include: { topics: true },
     });
 

@@ -1,4 +1,5 @@
 import { Router, Response } from "express";
+import { z } from "zod";
 import { prisma } from "../lib/prisma";
 import { authenticate, AuthRequest } from "../middleware/auth";
 
@@ -19,8 +20,9 @@ plansRouter.get("/", async (req: AuthRequest, res: Response): Promise<void> => {
 
 plansRouter.get("/:id", async (req: AuthRequest, res: Response): Promise<void> => {
   try {
+    const { id } = z.object({ id: z.string() }).parse(req.params);
     const plan = await prisma.studyPlan.findFirst({
-      where: { id: req.params.id, userId: req.userId },
+      where: { id, userId: req.userId },
     });
     if (!plan) {
       res.status(404).json({ error: "Plan not found" });
@@ -34,7 +36,8 @@ plansRouter.get("/:id", async (req: AuthRequest, res: Response): Promise<void> =
 
 plansRouter.delete("/:id", async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    await prisma.studyPlan.delete({ where: { id: req.params.id, userId: req.userId } });
+    const { id } = z.object({ id: z.string() }).parse(req.params);
+    await prisma.studyPlan.delete({ where: { id, userId: req.userId } });
     res.json({ success: true });
   } catch {
     res.status(500).json({ error: "Failed to delete plan" });

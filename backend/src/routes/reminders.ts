@@ -62,7 +62,8 @@ remindersRouter.post("/", async (req: AuthRequest, res: Response): Promise<void>
 
 remindersRouter.delete("/:id", async (req: AuthRequest, res: Response): Promise<void> => {
   try {
-    await prisma.reminder.delete({ where: { id: req.params.id, userId: req.userId } });
+    const { id } = z.object({ id: z.string() }).parse(req.params);
+    await prisma.reminder.delete({ where: { id, userId: req.userId } });
     res.json({ success: true });
   } catch {
     res.status(500).json({ error: "Failed to delete reminder" });
