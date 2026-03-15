@@ -1,0 +1,122 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id              String    @id @default(uuid())
+  email           String    @unique
+  name            String
+  passwordHash    String
+  avatarUrl       String?
+  plan            Plan      @default(FREE)
+  planExpiresAt   DateTime?
+  razorpaySubId   String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  subjects        Subject[]
+  studySessions   StudySession[]
+  reminders       Reminder[]
+  studyPlans      StudyPlan[]
+}
+
+enum Plan {
+  FREE
+  PRO
+}
+
+model Subject {
+  id          String   @id @default(uuid())
+  userId      String
+  name        String
+  color       String   @default("#22c55e")
+  examDate    DateTime?
+  syllabusUrl String?
+  totalTopics Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topics      Topic[]
+}
+
+model Topic {
+  id          String      @id @default(uuid())
+  subjectId   String
+  name        String
+  description String?
+  status      TopicStatus @default(PENDING)
+  priority    Priority    @default(MEDIUM)
+  estimatedMinutes Int    @default(60)
+  order       Int         @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  subject     Subject     @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  sessions    StudySession[]
+}
+
+enum TopicStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+  REVISION
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+model StudySession {
+  id          String   @id @default(uuid())
+  userId      String
+  topicId     String
+  startedAt   DateTime
+  endedAt     DateTime?
+  durationMin Int      @default(0)
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic       Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+}
+
+model Reminder {
+  id          String       @id @default(uuid())
+  userId      String
+  title       String
+  message     String
+  scheduledAt DateTime
+  type        ReminderType @default(STUDY)
+  sent        Boolean      @default(false)
+  createdAt   DateTime     @default(now())
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum ReminderType {
+  STUDY
+  REVISION
+  EXAM
+}
+
+model StudyPlan {
+  id          String   @id @default(uuid())
+  userId      String
+  title       String
+  content     Json
+  aiGenerated Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
