@@ -19,10 +19,11 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
+          cache-dependency-path: backend/package-lock.json
 
       - name: Install frontend deps
         working-directory: frontend
-        run: npm ci
+        run: npm install
 
       - name: TypeScript check (frontend)
         working-directory: frontend
@@ -48,11 +49,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
+          cache: "npm"
+          cache-dependency-path: backend/package-lock.json
 
       - name: Build frontend
         working-directory: frontend
         run: |
-          npm ci
+          npm install
           npm run build
 
       - name: Build backend
@@ -85,7 +88,7 @@ jobs:
           script: |
             cd /var/www/sylla
             git pull origin main
-            cd frontend && npm ci && npm run build
+            cd frontend && npm install && npm run build
             cd ../backend && npm ci && npx prisma generate && npm run build
             pm2 reload sylla-api --update-env
             echo "✅ Deployed successfully"

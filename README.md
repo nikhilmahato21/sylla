@@ -17,7 +17,7 @@ A full-stack AI-powered study tracker with PDF syllabus parsing, smart study pla
 | Database | MongoDB Atlas + Prisma ORM |
 | Auth | JWT + bcrypt |
 | AI | Google Gemini (gemini-1.5-flash) |
-| Cache/Queue | Redis via ioredis (Docker: redis-stack) |
+| Cache/Queue | Upstash Redis |
 | Payments | Razorpay |
 | File Upload | Multer + pdfjs-dist |
 
@@ -43,7 +43,6 @@ sylla/
 │   │   └── lib/       # Prisma, Redis clients
 │   └── prisma/
 │       └── schema.prisma
-└── docker-compose.yml # Redis Stack
 ```
 
 ---
@@ -56,7 +55,6 @@ sylla/
 - MongoDB Atlas account
 - Google AI Studio API key (Gemini)
 - Razorpay account (test keys)
-- Docker (for Redis)
 
 ### 2. Clone & Install
 
@@ -64,10 +62,13 @@ sylla/
 git clone <repo>
 cd sylla
 
-# Install all dependencies
+# Install frontend
+cd frontend
 npm install
-cd frontend && npm install
-cd ../backend && npm install
+
+# Install backend
+cd ../backend
+npm install
 ```
 
 ### 3. Environment Variables
@@ -81,7 +82,8 @@ GOOGLE_AI_API_KEY="AIza..."
 RAZORPAY_KEY_ID="rzp_test_..."
 RAZORPAY_KEY_SECRET="..."
 RAZORPAY_WEBHOOK_SECRET="..."
-REDIS_URL="redis://:sylla_redis_pass@localhost:6379"
+UPSTASH_REDIS_REST_URL="https://your-instance.upstash.io"
+UPSTASH_REDIS_REST_TOKEN="your-upstash-token"
 ```
 
 **Frontend** — copy `frontend/.env.example` to `frontend/.env`:
@@ -90,13 +92,7 @@ REDIS_URL="redis://:sylla_redis_pass@localhost:6379"
 VITE_API_BASE_URL=http://localhost:3001/api
 ```
 
-### 4. Start Redis
-
-```bash
-docker-compose up -d
-```
-
-### 5. Setup Database
+### 4. Setup Database
 
 ```bash
 cd backend
@@ -104,13 +100,9 @@ npx prisma generate
 npx prisma db push
 ```
 
-### 6. Run Dev Servers
+### 5. Run Dev Servers
 
 ```bash
-# From root - runs both frontend and backend without npm workspaces
-npm run dev
-
-# Or separately:
 cd backend && npm run dev   # http://localhost:3001
 cd frontend && npm run dev  # http://localhost:5173
 ```
@@ -195,7 +187,7 @@ cd frontend && npm run dev  # http://localhost:5173
 
 ## Redis Usage
 
-Redis Stack is used for:
+Upstash Redis is used for:
 - **Reminder scheduling** — sorted set `reminders:scheduled` (score = Unix timestamp)
 - **Cron worker** — checks every minute, fires due reminders
 - **Notification inbox** — `notifications:{userId}` list, last 50
@@ -219,10 +211,11 @@ npm run build
 # serve /dist with nginx or any static host
 ```
 
-### Redis in Production
-Use Redis Cloud or Upstash:
+### Redis
+Configure Upstash:
 ```env
-REDIS_URL="rediss://:<password>@<host>:6379"
+UPSTASH_REDIS_REST_URL="https://your-instance.upstash.io"
+UPSTASH_REDIS_REST_TOKEN="your-upstash-token"
 ```
 
 ---
