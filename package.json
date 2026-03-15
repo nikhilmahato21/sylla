@@ -2,13 +2,12 @@
   "name": "sylla",
   "version": "1.0.0",
   "private": true,
-  "workspaces": ["frontend", "backend"],
   "scripts": {
-    "dev": "concurrently \"npm run dev --workspace=backend\" \"npm run dev --workspace=frontend\"",
-    "build": "npm run build --workspace=frontend && npm run build --workspace=backend",
-    "start": "npm run start --workspace=backend",
-    "install:all": "npm install && npm install --workspace=frontend && npm install --workspace=backend",
-    "postinstall": "npm run prisma:generate --workspace=backend"
+    "dev": "concurrently \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\"",
+    "build": "npm --prefix frontend run build && npm --prefix backend run build",
+    "start": "npm --prefix backend run start",
+    "install:all": "npm install && npm --prefix frontend install && npm --prefix backend install",
+    "postinstall": "npm --prefix backend run prisma:generate"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"

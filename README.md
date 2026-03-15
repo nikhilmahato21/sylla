@@ -107,7 +107,7 @@ npx prisma db push
 ### 6. Run Dev Servers
 
 ```bash
-# From root - runs both frontend and backend
+# From root - runs both frontend and backend without npm workspaces
 npm run dev
 
 # Or separately:
